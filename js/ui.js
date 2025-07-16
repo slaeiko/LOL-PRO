@@ -16,6 +16,20 @@ const UI = {
     championSpells: document.getElementById('championSpells')
   },
 
+  // Función para verificar que todos los elementos existen
+  validateElements() {
+    const missingElements = [];
+    Object.entries(this.elements).forEach(([key, element]) => {
+      if (!element) {
+        missingElements.push(key);
+      }
+    });
+    if (missingElements.length > 0) {
+      console.warn('Elementos DOM no encontrados:', missingElements);
+    }
+    return missingElements.length === 0;
+  },
+
   renderChampions(champions, championSkinsCount, container = null) {
     const targetContainer = container || this.elements.championsContainer;
     targetContainer.innerHTML = '';
@@ -34,7 +48,7 @@ const UI = {
         <div class="relative rounded-lg shadow-lg bg-gray-800 text-white hover:scale-105 transition-transform champion-card" data-champ="${champ.id}">
           <button class="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-yellow-400 text-black favorite-btn ${isFavorite ? 'font-bold' : ''}" 
                   onclick="event.stopPropagation(); UI.toggleFavorite('${champ.id}', this)">
-            ${isFavorite ? '★' : '☆'}
+            <i class="fas ${isFavorite ? 'fa-star' : 'fa-star'} ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}"></i>
           </button>
           <img src="${API.getChampionImageUrl(champ.image.full)}" class="w-full h-40 object-cover rounded-t-lg" alt="${champ.name}">
           <div class="p-4">
@@ -51,12 +65,21 @@ const UI = {
 
   toggleFavorite(championId, button) {
     const isFavorite = Favorites.toggleFavorite(championId);
+    const icon = button.querySelector('i');
+    
     button.classList.toggle('font-bold', isFavorite);
-    button.innerHTML = isFavorite ? '★' : '☆';
+    
+    // Verificar que el icono existe antes de modificarlo
+    if (icon) {
+      icon.className = `fas fa-star ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}`;
+    } else {
+      // Fallback para casos donde no hay icono Font Awesome
+      button.innerHTML = `<i class="fas fa-star ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}"></i>`;
+    }
     
     // Actualizar la pestaña de favoritos si está activa
     const favoritesTab = document.getElementById('favorites-tab');
-    if (favoritesTab.classList.contains('active')) {
+    if (favoritesTab && favoritesTab.classList.contains('active')) {
       this.renderFavorites();
     }
   },
@@ -101,15 +124,27 @@ const UI = {
   },
 
   async showSkins(champId, champName) {
+    // Verificar que los elementos existan antes de usarlos
+    if (!this.elements.modal || !this.elements.skinsLoader || !this.elements.championInfoLoader) {
+      console.error('Elementos del modal no encontrados');
+      return;
+    }
+    
     // Mostrar modal
     this.elements.modal.classList.remove('hidden');
     this.elements.modal.classList.add('flex');
 
     this.elements.skinsLoader.classList.remove('hidden');
     this.elements.championInfoLoader.classList.remove('hidden');
-    this.elements.championDetails.classList.add('hidden');
-    this.elements.carouselInner.innerHTML = '';
-    this.elements.modalTitle.textContent = champName;
+    if (this.elements.championDetails) {
+      this.elements.championDetails.classList.add('hidden');
+    }
+    if (this.elements.carouselInner) {
+      this.elements.carouselInner.innerHTML = '';
+    }
+    if (this.elements.modalTitle) {
+      this.elements.modalTitle.textContent = champName;
+    }
 
     const championData = await API.getChampionDetails(champId);
     if (championData) {
@@ -166,8 +201,10 @@ const UI = {
 
   // Cerrar modal
   closeModal() {
-    this.elements.modal.classList.add('hidden');
-    this.elements.modal.classList.remove('flex');
+    if (this.elements.modal) {
+      this.elements.modal.classList.add('hidden');
+      this.elements.modal.classList.remove('flex');
+    }
   },
 
   async loadRunesAndBuilds(champId) {
@@ -439,4 +476,9 @@ const UI = {
 };
 
 // Al final del archivo, agrega el evento para cerrar el modal:
-document.getElementById('closeModalBtn').onclick = () => UI.closeModal();
+document.addEventListener('DOMContentLoaded', () => {
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  if (closeModalBtn) {
+    closeModalBtn.onclick = () => UI.closeModal();
+  }
+});

@@ -1,15 +1,12 @@
-/* Ocultar scroll completamente */
+/* Ocultar scroll para elementos específicos del modal */
 .abilities-container,
 #championInfo,
 #skinsModal,
 #championDetailsTabContent,
 #championRunes,
-#championRunesContent,
-body,
-html {
+#championRunesContent {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
-  overflow: hidden !important;
 }
 
 .abilities-container::-webkit-scrollbar,
@@ -17,24 +14,45 @@ html {
 #skinsModal::-webkit-scrollbar,
 #championDetailsTabContent::-webkit-scrollbar,
 #championRunes::-webkit-scrollbar,
-#championRunesContent::-webkit-scrollbar,
-body::-webkit-scrollbar,
-html::-webkit-scrollbar {
+#championRunesContent::-webkit-scrollbar {
   display: none !important;
   width: 0px !important;
   height: 0px !important;
   background: transparent !important;
 }
 
-/* Clase específica para ocultar scroll */
-.overflow-hidden {
-  overflow: hidden !important;
+/* Permitir scroll normal en body y html */
+body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+html {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Aplicar overflow hidden a elementos que necesiten scroll interno */
 #championInfo {
   overflow-y: auto !important;
   overflow-x: hidden !important;
+}
+
+/* Clases para manejo de pestañas */
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.show {
+  display: block !important;
+}
+
+.tab-pane.active {
+  display: block !important;
+}
+
+.tab-pane.show.active {
+  display: block !important;
 }
 
 /* Estilo personalizado para las runas */
