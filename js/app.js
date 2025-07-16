@@ -22,10 +22,6 @@ class ChampionsApp {
   setupEventListeners() {
     console.log('Configurando event listeners...');
     
-    if (UI.elements.modeToggle) {
-      UI.elements.modeToggle.onclick = () => UI.toggleMode();
-      console.log('Mode toggle configurado');
-    }
     if (UI.elements.searchInput) {
       UI.elements.searchInput.addEventListener('input', (e) => this.filterChampions(e.target.value));
       console.log('Search input configurado');
@@ -171,6 +167,13 @@ class ChampionsApp {
     const filtered = this.allChampions.filter(champ => 
       champ.name.toLowerCase().includes(value)
     );
+    
+    // Resetear a la primera página cuando se busca
+    if (searchValue !== UI.lastSearchValue) {
+      UI.currentPage = 1;
+    }
+    UI.lastSearchValue = searchValue;
+    
     UI.renderChampions(filtered, this.championSkinsCount);
   }
 }

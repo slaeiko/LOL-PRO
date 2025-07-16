@@ -6,15 +6,22 @@ const UI = {
     modalTitle: document.getElementById('skinsModalLabel'),
     carouselInner: document.getElementById('carouselInner'),
     searchInput: document.getElementById('searchInput'),
-    modeToggle: document.getElementById('modeToggle'),
     skinsLoader: document.getElementById('skinsLoader'),
     championInfoLoader: document.getElementById('championInfoLoader'),
     championDetails: document.getElementById('championDetails'),
     championLore: document.getElementById('championLore'),
     championTags: document.getElementById('championTags'),
     championStats: document.getElementById('championStats'),
-    championSpells: document.getElementById('championSpells')
+    championSpells: document.getElementById('championSpells'),
+    pagination: document.getElementById('pagination'),
+    pageNumbers: document.getElementById('pageNumbers'),
+    prevPage: document.getElementById('prevPage'),
+    nextPage: document.getElementById('nextPage')
   },
+  
+  currentPage: 1,
+  itemsPerPage: 12,
+  totalPages: 1,
 
   // Función para verificar que todos los elementos existen
   validateElements() {
@@ -32,23 +39,48 @@ const UI = {
 
   renderChampions(champions, championSkinsCount, container = null) {
     const targetContainer = container || this.elements.championsContainer;
+    
+    if (!targetContainer) return;
+    
+    // Si es el contenedor de favoritos, no usar paginación
+    if (container === this.elements.favoriteChampionsContainer) {
+      this.renderChampionsPage(champions, championSkinsCount, targetContainer);
+      return;
+    }
+    
+    // Configurar paginación
+    this.totalPages = Math.ceil(champions.length / this.itemsPerPage);
+    this.setupPagination();
+    
+    // Calcular campeones para la página actual
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    const championsForPage = champions.slice(startIndex, endIndex);
+    
+    this.renderChampionsPage(championsForPage, championSkinsCount, targetContainer);
+    
+    // Actualizar estadísticas del footer
+    this.updateFooterStats(champions.length);
+  },
+
+  renderChampionsPage(champions, championSkinsCount, targetContainer) {
     targetContainer.innerHTML = '';
 
-    if (champions.length === 0 && container === this.elements.favoriteChampionsContainer) {
+    if (champions.length === 0 && targetContainer === this.elements.favoriteChampionsContainer) {
       targetContainer.innerHTML = '<div class="col-span-2 md:col-span-4 text-center text-gray-400"><p>No tienes campeones favoritos aún.</p></div>';
       return;
     }
 
-    champions.forEach(champ => {
+    champions.forEach((champ, index) => {
       const card = document.createElement('div');
       card.className = '';
       const isFavorite = Favorites.isFavorite(champ.id);
 
       card.innerHTML = `
-        <div class="relative rounded-lg shadow-lg bg-gray-800 text-white hover:scale-105 transition-transform champion-card" data-champ="${champ.id}">
-          <button class="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-yellow-400 text-black favorite-btn ${isFavorite ? 'font-bold' : ''}" 
+        <div class="relative rounded-lg shadow-lg bg-gray-800 text-white hover:scale-105 transition-transform champion-card" data-champ="${champ.id}" style="animation-delay: ${index * 0.1}s">
+          <button class="absolute top-2 right-2 z-10 px-2 py-1 rounded-full favorite-btn ${isFavorite ? 'favorited' : 'bg-yellow-400 text-black'}" 
                   onclick="event.stopPropagation(); UI.toggleFavorite('${champ.id}', this)">
-            <i class="fas ${isFavorite ? 'fa-star' : 'fa-star'} ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}"></i>
+            <i class="fas fa-star ${isFavorite ? 'text-yellow-300' : 'text-gray-600'}"></i>
           </button>
           <img src="${API.getChampionImageUrl(champ.image.full)}" class="w-full h-40 object-cover rounded-t-lg" alt="${champ.name}">
           <div class="p-4">
@@ -63,19 +95,88 @@ const UI = {
     });
   },
 
+  setupPagination() {
+    if (!this.elements.pageNumbers || !this.elements.prevPage || !this.elements.nextPage) return;
+    
+    // Configurar botones prev/next
+    this.elements.prevPage.disabled = this.currentPage === 1;
+    this.elements.nextPage.disabled = this.currentPage === this.totalPages;
+    
+    // Configurar event listeners
+    this.elements.prevPage.onclick = () => {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        window.app.filterChampions(this.elements.searchInput?.value || '');
+      }
+    };
+    
+    this.elements.nextPage.onclick = () => {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        window.app.filterChampions(this.elements.searchInput?.value || '');
+      }
+    };
+    
+    // Generar números de página
+    this.elements.pageNumbers.innerHTML = '';
+    
+    let startPage = Math.max(1, this.currentPage - 2);
+    let endPage = Math.min(this.totalPages, this.currentPage + 2);
+    
+    if (endPage - startPage < 4) {
+      if (startPage === 1) {
+        endPage = Math.min(this.totalPages, startPage + 4);
+      } else {
+        startPage = Math.max(1, endPage - 4);
+      }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      const pageBtn = document.createElement('button');
+      pageBtn.className = `page-number ${i === this.currentPage ? 'active' : ''}`;
+      pageBtn.textContent = i;
+      pageBtn.onclick = () => {
+        this.currentPage = i;
+        window.app.filterChampions(this.elements.searchInput?.value || '');
+      };
+      this.elements.pageNumbers.appendChild(pageBtn);
+    }
+  },
+
+  updateFooterStats(totalChampions) {
+    const footerChampCount = document.getElementById('footerChampCount');
+    const footerFavCount = document.getElementById('footerFavCount');
+    const headerFavCount = document.getElementById('headerFavCount');
+    
+    if (footerChampCount) footerChampCount.textContent = totalChampions;
+    
+    const favCount = Favorites.getFavorites().length;
+    if (footerFavCount) footerFavCount.textContent = favCount;
+    if (headerFavCount) headerFavCount.textContent = `${favCount} Favoritos`;
+  },
+
   toggleFavorite(championId, button) {
     const isFavorite = Favorites.toggleFavorite(championId);
     const icon = button.querySelector('i');
     
-    button.classList.toggle('font-bold', isFavorite);
-    
-    // Verificar que el icono existe antes de modificarlo
-    if (icon) {
-      icon.className = `fas fa-star ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}`;
+    // Actualizar estilos del botón
+    if (isFavorite) {
+      button.className = 'absolute top-2 right-2 z-10 px-2 py-1 rounded-full favorite-btn favorited';
+      if (icon) icon.className = 'fas fa-star text-yellow-300';
     } else {
-      // Fallback para casos donde no hay icono Font Awesome
-      button.innerHTML = `<i class="fas fa-star ${isFavorite ? 'text-yellow-800' : 'text-gray-600'}"></i>`;
+      button.className = 'absolute top-2 right-2 z-10 px-2 py-1 rounded-full favorite-btn bg-yellow-400 text-black';
+      if (icon) icon.className = 'fas fa-star text-gray-600';
     }
+    
+    // Animación del contador de favoritos
+    const favoritesCount = document.getElementById('favoritesCount');
+    if (favoritesCount) {
+      favoritesCount.classList.add('favorites-count-animate');
+      setTimeout(() => favoritesCount.classList.remove('favorites-count-animate'), 600);
+    }
+    
+    // Actualizar estadísticas
+    this.updateFooterStats(window.app?.allChampions?.length || 0);
     
     // Actualizar la pestaña de favoritos si está activa
     const favoritesTab = document.getElementById('favorites-tab');
@@ -164,8 +265,8 @@ const UI = {
     this.elements.carouselInner.innerHTML = '';
     skins.forEach((skin, idx) => {
       this.elements.carouselInner.innerHTML += `
-        <div class="carousel-item${idx === 0 ? ' active' : ''}" style="${idx !== 0 ? 'display:none;' : ''}">
-          <img src="${API.getSkinSplashUrl(champId, skin.num)}" class="block w-full" alt="${skin.name}">
+        <div class="carousel-item${idx === 0 ? ' active' : ''} flex items-center justify-center relative h-full" style="${idx !== 0 ? 'display:none;' : ''}">
+          <img class="max-h-full pt-12" src="${API.getSkinSplashUrl(champId, skin.num)}" alt="${skin.name}">
           <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-2 rounded-lg bg-black bg-opacity-60 shadow-lg text-center">
             <span class="text-2xl font-bold text-blue-300 drop-shadow-lg">${skin.name === 'default' ? champName : skin.name}</span>
           </div>
@@ -444,34 +545,6 @@ const UI = {
 
     this.elements.championInfoLoader.classList.add('hidden');
     this.elements.championDetails.classList.remove('hidden');
-  },
-
-  toggleMode() {
-    const isCurrentlyDark = document.body.classList.contains('bg-gray-800');
-
-    if (isCurrentlyDark) {
-      document.body.classList.remove('bg-gray-800', 'text-white');
-      document.body.classList.add('bg-gray-100', 'text-black');
-      this.elements.modeToggle.textContent = 'Modo Oscuro';
-
-      document.querySelectorAll('.card').forEach(card => {
-        card.classList.remove('bg-gray-800', 'text-white');
-        card.classList.add('bg-gray-100', 'text-black');
-      });
-      document.querySelector('.modal-content').classList.remove('bg-gray-800', 'text-white');
-      document.querySelector('.modal-content').classList.add('bg-gray-100', 'text-black');
-    } else {
-      document.body.classList.remove('bg-gray-100', 'text-black');
-      document.body.classList.add('bg-gray-800', 'text-white');
-      this.elements.modeToggle.textContent = 'Modo Claro';
-
-      document.querySelectorAll('.card').forEach(card => {
-        card.classList.remove('bg-gray-100', 'text-black');
-        card.classList.add('bg-gray-800', 'text-white');
-      });
-      document.querySelector('.modal-content').classList.remove('bg-gray-100', 'text-black');
-      document.querySelector('.modal-content').classList.add('bg-gray-800', 'text-white');
-    }
   }
 };
 
