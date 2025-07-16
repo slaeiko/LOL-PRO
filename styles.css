@@ -1,0 +1,137 @@
+.spinner-border {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -1rem;
+  margin-top: -1rem;
+  z-index: 10;
+}
+
+.mode-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.champion-card {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.champion-card:hover {
+  transform: scale(1.05);
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.favorite-btn.active {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.abilities-container {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+.abilities-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.ability-item {
+  border: 1px solid #444;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ability-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.stat-bar {
+  background-color: #444;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+  transition: width 0.3s ease;
+}
+
+#championInfo {
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+#championInfo::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.nav-tabs .nav-link {
+  color: #adb5bd;
+  border-color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+  color: #fff;
+  background-color: #495057;
+  border-color: #495057;
+}
+
+.bg-white.text-dark, .bg-light.text-dark {
+  color: #222 !important;
+  background-color: #fff !important;
+}
+
+.bg-white .card-title, .bg-white .card-text, .bg-white .badge {
+  color: #222 !important;
+}
+
+.bg-white .ability-item, .bg-white .stat-bar, .bg-white .player-item {
+  background-color: #f8f9fa !important;
+  color: #222 !important;
+  border-color: #ddd !important;
+}
+
+.bg-white .modal-content {
+  background-color: #fff !important;
+  color: #222 !important;
+}
+
+.bg-dark .text-muted,
+.bg-dark .small,
+.bg-secondary .text-muted,
+.bg-secondary .small,
+.bg-dark .modal-content .text-muted,
+.bg-dark .modal-content .small,
+body.bg-dark .text-muted,
+body.bg-dark .small {
+  color: #e0e0e0 !important;
+}
